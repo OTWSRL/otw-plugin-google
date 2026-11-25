@@ -1,10 +1,8 @@
 import { defineConfig, devices } from '@playwright/test'
 
-const PORT = 3495
-/** The stand-in SMS service the plugin's HTTP provider posts to (e2e/fake-sms.mjs). */
-const SMS_PORT = 3496
-const SMS_TOKEN = 'e2e-sms-token'
-const WHATSAPP_TOKEN = 'e2e-whatsapp-token'
+const PORT = 3510
+/** The stand-in for Google's servers (e2e/fake-google.mjs), where the site sends its requests. */
+const GOOGLE_PORT = 3511
 
 export default defineConfig({
   testDir: './e2e',
@@ -19,15 +17,10 @@ export default defineConfig({
   projects: [{ name: 'chromium', use: { ...devices['Desktop Chrome'] } }],
   webServer: [
     {
-      command: 'node e2e/fake-sms.mjs',
-      url: `http://127.0.0.1:${SMS_PORT}/health`,
+      command: 'node e2e/fake-google.mjs',
+      url: `http://127.0.0.1:${GOOGLE_PORT}/__/health`,
       reuseExistingServer: false,
-      env: {
-        FAKE_SMS_PORT: String(SMS_PORT),
-        FAKE_SMS_DIR: '.data/e2e-sms',
-        OTP_SMS_TOKEN: SMS_TOKEN,
-        WHATSAPP_TOKEN,
-      },
+      env: { FAKE_GOOGLE_PORT: String(GOOGLE_PORT) },
     },
     {
       // A fresh database and mail folder each run, so the first visit sets the site up.
@@ -39,13 +32,10 @@ export default defineConfig({
         CMS_DATA_DIR: '.data/e2e',
         DATABASE_URL: '',
         MAIL_FILE_DIR: '.data/e2e-mail',
-        // Text messages go to the stand-in service; its secret comes from the environment.
-        OTP_SMS_URL: `http://127.0.0.1:${SMS_PORT}/sms`,
-        OTP_SMS_TOKEN: SMS_TOKEN,
-        // WhatsApp's Cloud API is the same stand-in, at the address the Graph API would be.
-        WHATSAPP_API_URL: `http://127.0.0.1:${SMS_PORT}`,
-        WHATSAPP_TOKEN,
-        OTP_SECRET_KEY: 'an e2e key of at least thirty-two characters',
+        // Google is the stand-in; the client's id and secret are the ones it knows.
+        GOOGLE_API_URL: `http://127.0.0.1:${GOOGLE_PORT}`,
+        GOOGLE_CLIENT_ID: 'test-client.apps.googleusercontent.com',
+        GOOGLE_CLIENT_SECRET: 'test-client-secret',
       },
     },
   ],
