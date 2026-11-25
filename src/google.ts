@@ -107,8 +107,11 @@ const record = (value: unknown): Record<string, unknown> =>
 const text = (value: unknown): string => (typeof value === 'string' ? value : '')
 
 async function send(url: string, init: RequestInit, timeoutMs: number): Promise<Response> {
+  // A read may be sent on to another of Google's hosts, as a file's bytes are: fetch follows it
+  // and leaves the token behind when the host changes. Anything that writes is never sent on.
+  const redirect = (init.method ?? 'GET') === 'GET' ? 'follow' : 'error'
   try {
-    return await fetch(url, { ...init, redirect: 'error', signal: AbortSignal.timeout(timeoutMs) })
+    return await fetch(url, { ...init, redirect, signal: AbortSignal.timeout(timeoutMs) })
   } catch {
     // Never the cause: a fetch error can carry the address, and a body, in its message.
     throw new GoogleError('unavailable', 'Google didn’t answer. Try again in a moment.')

@@ -1,6 +1,9 @@
+import { createServer, type IncomingHttpHeaders } from 'node:http'
+import type { AddressInfo } from 'node:net'
 import { describe, expect, it } from 'vitest'
 import {
   apiAnswer,
+  apiRequest,
   apiUrl,
   GoogleError,
   googleUrl,
@@ -186,5 +189,51 @@ describe('an API’s answer', () => {
   it('is worth trying again only when Google says so', () => {
     expect([429, 500, 503].every(retryable)).toBe(true)
     expect([200, 400, 401, 403, 404].some(retryable)).toBe(false)
+  })
+})
+
+describe('a request that Google sends on to another host', () => {
+  /** Two servers: the first sends every request on to the second, which says what it was given. */
+  async function pair() {
+    const seen: { method: string; headers: IncomingHttpHeaders }[] = []
+    const second = createServer((request, response) => {
+      seen.push({ method: request.method ?? '', headers: request.headers })
+      response.writeHead(200, { 'content-type': 'application/json' }).end('{"from":"second"}')
+    })
+    await new Promise<void>((resolve) => second.listen(0, '127.0.0.1', resolve))
+    const target = `http://localhost:${(second.address() as AddressInfo).port}/file`
+    const first = createServer((_request, response) => {
+      response.writeHead(302, { location: target }).end()
+    })
+    await new Promise<void>((resolve) => first.listen(0, '127.0.0.1', resolve))
+    const close = () =>
+      Promise.all([first, second].map((server) => new Promise((done) => server.close(done))))
+    return { url: `http://127.0.0.1:${(first.address() as AddressInfo).port}/file`, seen, close }
+  }
+
+  it('follows a read, and leaves the token behind when the host changes', async () => {
+    const { url, seen, close } = await pair()
+    try {
+      const response = await apiRequest('secret-token', url)
+      expect(await response.json()).toEqual({ from: 'second' })
+      expect(seen).toHaveLength(1)
+      expect(seen[0]!.headers.authorization).toBeUndefined()
+    } finally {
+      await close()
+    }
+  })
+
+  it('never follows anything that writes', async () => {
+    const { url, seen, close } = await pair()
+    try {
+      for (const method of ['POST', 'PUT', 'PATCH', 'DELETE'] as const) {
+        await expect(apiRequest('secret-token', url, { method, json: {} })).rejects.toMatchObject({
+          kind: 'unavailable',
+        })
+      }
+      expect(seen).toEqual([])
+    } finally {
+      await close()
+    }
   })
 })
