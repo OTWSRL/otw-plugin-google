@@ -48,7 +48,8 @@ export interface FakeGoogle {
     method: string,
     host: string,
     pattern: string,
-    scope: readonly string[] | null,
+    /** The scopes one of which the token must have; `null` for any token; `false` for no token at all. */
+    scope: readonly string[] | null | false,
     handler: (call: FakeCall) => FakeAnswer | Promise<FakeAnswer>,
   ): void
   reset(): void

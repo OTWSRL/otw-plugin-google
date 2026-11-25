@@ -317,6 +317,22 @@ ${scopes.map((scope) => `<label><input type="checkbox" name="only" value="${esca
       if (handler.method !== method || handler.host !== host) continue
       const match = handler.pattern.exec(path)
       if (!match) continue
+      const params = Object.fromEntries(
+        handler.names.map((name, index) => [name, decodeURIComponent(match[index + 1])]),
+      )
+      // An upload's own address takes bytes from whoever holds it: `scope: false` asks for no token.
+      if (handler.scope === false) {
+        return handler.handler({
+          url,
+          method,
+          headers,
+          body,
+          params,
+          who: null,
+          person: null,
+          scopes: [],
+        })
+      }
       const bearer = /^Bearer (.+)$/.exec(headers.authorization ?? '')?.[1]
       const session = bearer ? fake.access.get(bearer) : null
       if (!session || session.expires < Date.now())
@@ -328,9 +344,6 @@ ${scopes.map((scope) => `<label><input type="checkbox" name="only" value="${esca
           'Request had insufficient authentication scopes.',
         )
       }
-      const params = Object.fromEntries(
-        handler.names.map((name, index) => [name, decodeURIComponent(match[index + 1])]),
-      )
       return handler.handler({
         url,
         method,

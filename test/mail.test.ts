@@ -1,4 +1,4 @@
-import { definePlugin, type OutgoingMail } from '@otwdesign/sdk'
+import { definePlugin, type MailMessage, type OutgoingMail } from '@otwdesign/sdk'
 import { describe, expect, it } from 'vitest'
 import { listAccounts } from '../src/accounts'
 import { bootGoogle, SEND, type GoogleSite, type Person } from './fixtures'
@@ -102,13 +102,11 @@ describe('the site’s email through Gmail', () => {
     await site.connect(grace, 'grace', { service: 'mail' })
     const [hers] = await listAccounts(site.cms(), grace.user.id)
 
-    const message: OutgoingMail = {
+    const message: MailMessage = {
       from: 'Grace <grace@example.com>',
       to: ['x@example.com'],
       subject: 'S',
       text: 'T',
-      html: null,
-      replyTo: null,
     }
     await site.kernel.mail.send(message)
     // Not allowed by its owner: it goes from the site's account.

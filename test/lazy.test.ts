@@ -1,4 +1,4 @@
-import { readdirSync, readFileSync } from 'node:fs'
+import { existsSync, readdirSync, readFileSync } from 'node:fs'
 import { join } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { describe, expect, it, vi } from 'vitest'
@@ -114,7 +114,9 @@ describe('the files every request loads', () => {
     expect(services.sort()).toEqual(['drive', 'gmail', 'youtube'])
     const allowed = new Set([...OUTSIDE, '../../config'])
     for (const id of services) {
-      for (const file of ['routes.ts', 'admin.ts']) {
+      // A screens list may be written with JSX.
+      const admin = existsSync(join(SRC, `services/${id}/admin.tsx`)) ? 'admin.tsx' : 'admin.ts'
+      for (const file of ['routes.ts', admin]) {
         const heavy = imports(`services/${id}/${file}`).filter((name) => !allowed.has(name))
         expect({ file: `${id}/${file}`, heavy }).toEqual({ file: `${id}/${file}`, heavy: [] })
       }

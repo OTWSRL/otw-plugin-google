@@ -161,7 +161,10 @@ describe('an API’s answer', () => {
   it('carries Google’s reason for a refusal on one line, and nothing else of the body', async () => {
     const error = await apiAnswer(
       failure(400, 'invalid', `Bad\r\nname\u0000 ${'x'.repeat(500)}`),
-    ).catch((caught: unknown) => caught as GoogleError)
+    ).then(
+      () => new GoogleError('refused', 'no error'),
+      (caught: unknown) => caught as GoogleError,
+    )
     expect(error.message.startsWith('Google refused: Bad name')).toBe(true)
     expect(error.message).not.toMatch(/[\r\n\u0000]/)
     expect(error.message.length).toBeLessThan(330)

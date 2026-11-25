@@ -157,6 +157,20 @@ export default definePlugin({
         (await import('./oauth')).finishConnect(cms, request, context),
     })
 
+    // The upload screens' script: the plugin's only browser code, fetched by those screens alone.
+    cms.routes.api({
+      method: 'GET',
+      path: '/upload.js',
+      handler: async () =>
+        new Response((await import('./upload-script')).UPLOAD_SCRIPT, {
+          headers: {
+            'content-type': 'text/javascript; charset=utf-8',
+            'x-content-type-options': 'nosniff',
+            'cache-control': 'public, max-age=3600',
+          },
+        }),
+    })
+
     // Each service's own addresses, for what a form post can't do: an upload, a download.
     youtubeRoutes(cms)
     driveRoutes(cms)
