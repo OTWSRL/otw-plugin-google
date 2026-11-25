@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vitest'
+import { describe, expect, it, vi } from 'vitest'
 import {
   allows,
   canSend,
@@ -162,6 +162,16 @@ describe('the way back', () => {
     expect(site.fake.requests.filter((request) => request.path === '/token')).toHaveLength(0)
 
     expect((await site.back(ada, left.cookie, callback)).outcome).toBe('connected')
+  })
+
+  it('runs out after ten minutes', async () => {
+    const site = await bootGoogle()
+    const ada = await site.person('ada@cms.test')
+    const left = await site.leave(ada)
+    const callback = site.fake.authorize(left.location, 'ada')
+    vi.useFakeTimers({ toFake: ['Date'], now: Date.now() + 10 * 60 * 1000 + 1000 })
+    expect((await site.back(ada, left.cookie, callback)).outcome).toBe('expired')
+    expect(await site.rows()).toEqual([])
   })
 
   it('goes back only to a path on this site', async () => {

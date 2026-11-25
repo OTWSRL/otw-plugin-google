@@ -261,7 +261,7 @@ function apiError(status: number, body: unknown): GoogleError {
   const first = record(Array.isArray(error.errors) ? error.errors[0] : undefined)
   const reason = text(first.reason) || text(error.status)
   const said = text(error.message)
-    .replace(/\p{Cc}/gu, ' ')
+    .replace(/[\p{Cc}\s]+/gu, ' ')
     .slice(0, 300)
   if (status === 401) {
     return new GoogleError(
