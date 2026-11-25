@@ -17,7 +17,6 @@
     "@otwdesign/admin-ui": "link:../../nextjs-cms/packages/admin-ui",
     "@otwdesign/next": "link:../../nextjs-cms/packages/next",
     "@otwdesign/plugin-google": "workspace:*",
-    "@otwdesign/plugin-mail-file": "link:../../nextjs-cms/plugins/mail-file",
     "@otwdesign/sdk": "link:../../nextjs-cms/packages/sdk",
     "drizzle-orm": "link:../../nextjs-cms/packages/core/node_modules/drizzle-orm",
     "next": "^16.4.3",

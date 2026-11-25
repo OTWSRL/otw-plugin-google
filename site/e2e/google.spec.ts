@@ -261,6 +261,33 @@ test('Gmail is allowed, shows the inbox, opens a message in a sealed frame, and 
   expect(sent.mime).toContain('To: "Grace Hopper" <grace@example.com>')
 })
 
+test('the site’s email goes out through the administrator’s Gmail', async ({ request }) => {
+  await admin.goto('/admin/google/settings')
+  await admin.getByLabel('Send the site’s email through Gmail').check()
+  await admin.getByRole('button', { name: 'Save Changes' }).click()
+  await notice(admin, /saved/i)
+
+  await admin.goto('/admin/google')
+  await expect(admin.getByText('Switched on, but no account is chosen')).toBeVisible()
+  await row(admin, 'ada@gmail.com').hover()
+  await row(admin, 'ada@gmail.com')
+    .getByRole('button', { name: 'Use for the site’s email' })
+    .click()
+  await notice(admin, 'The site’s email now goes out from ada@gmail.com.')
+  await expect(admin.locator('#google-setup')).toContainText('Goes out from ada@gmail.com.')
+
+  await admin.getByLabel('Send a test email to').fill('grace@example.com')
+  await admin.getByRole('button', { name: 'Send a test email' }).click()
+  await notice(admin, 'A test email is on its way to grace@example.com.')
+  const state = (await (await request.get(`${GOOGLE}/__/state`)).json()) as {
+    sent: { from: string; mime: string }[]
+  }
+  const sent = state.sent.at(-1)!
+  expect(sent.from).toBe('ada@gmail.com')
+  expect(sent.mime).toContain('To: grace@example.com')
+  expect(sent.mime).toContain('Subject: A test email from')
+})
+
 test('someone new signs in with Google, gets an account, and sees the Google screens only', async ({
   browser,
 }) => {

@@ -92,9 +92,6 @@ importers:
       '@otwdesign/plugin-google':
         specifier: workspace:*
         version: link:..
-      '@otwdesign/plugin-mail-file':
-        specifier: link:../../nextjs-cms/plugins/mail-file
-        version: link:../../nextjs-cms/plugins/mail-file
       '@otwdesign/sdk':
         specifier: link:../../nextjs-cms/packages/sdk
         version: link:../../nextjs-cms/packages/sdk

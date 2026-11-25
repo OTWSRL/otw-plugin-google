@@ -1,1 +1,1 @@
-{ "plugins": ["@otwdesign/plugin-mail-file", "@otwdesign/plugin-google"] }
+{ "plugins": ["@otwdesign/plugin-google"] }
