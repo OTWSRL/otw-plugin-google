@@ -217,6 +217,50 @@ test('Drive is allowed, browsed, and takes a file from the browser', async () =>
   expect(saved.suggestedFilename()).toBe('brief.txt')
 })
 
+test('Gmail is allowed, shows the inbox, opens a message in a sealed frame, and sends one', async ({
+  request,
+}) => {
+  await admin.goto('/admin/google/gmail')
+  await admin.getByRole('link', { name: 'Allow Gmail for ada@gmail.com' }).click()
+  await expect(admin.getByText('https://www.googleapis.com/auth/gmail.modify')).toBeVisible()
+  await consent(admin, 'ada@gmail.com')
+  await expect(admin).toHaveURL(/\/admin\/google\/gmail\?google=connected$/)
+  await expect(admin.getByRole('link', { name: /Inbox/ }).first()).toBeVisible()
+  await expect(admin.getByText('Episode 12 thumbnail').first()).toBeVisible()
+
+  // An email's own HTML never joins the admin's page: it's in a frame with no scripts.
+  await admin
+    .getByRole('link', { name: /Episode 12 thumbnail/ })
+    .first()
+    .click()
+  const frame = admin.locator('iframe').first()
+  await expect(frame).toHaveAttribute('sandbox', 'allow-popups allow-popups-to-escape-sandbox')
+  const source = await frame.getAttribute('src')
+  const framed = await request.get(source!, {
+    headers: {
+      cookie: (await admin.context().cookies()).map((c) => `${c.name}=${c.value}`).join('; '),
+    },
+  })
+  expect(framed.headers()['content-security-policy']).toContain('sandbox allow-popups')
+  expect(framed.headers()['content-security-policy']).toContain("default-src 'none'")
+  expect(await framed.text()).not.toMatch(/<script/i)
+
+  await admin.goto('/admin/google/gmail')
+  await admin.getByRole('link', { name: 'Compose' }).first().click()
+  await admin.getByLabel('To', { exact: true }).fill('Grace Hopper <grace@example.com>')
+  await admin.getByLabel('Subject').fill('The final cut is up')
+  await admin.getByLabel('Message').fill('Hi Grace,\n\nEpisode 12 is on YouTube.\n\nAda')
+  await admin.getByRole('button', { name: 'Send', exact: true }).click()
+  await notice(admin, 'Your message was sent.')
+  const state = (await (await request.get(`${GOOGLE}/__/state`)).json()) as {
+    sent: { from: string; mime: string }[]
+  }
+  const sent = state.sent.at(-1)!
+  expect(sent.from).toBe('ada@gmail.com')
+  expect(sent.mime).toContain('Subject: The final cut is up')
+  expect(sent.mime).toContain('To: "Grace Hopper" <grace@example.com>')
+})
+
 test('someone new signs in with Google, gets an account, and sees the Google screens only', async ({
   browser,
 }) => {
