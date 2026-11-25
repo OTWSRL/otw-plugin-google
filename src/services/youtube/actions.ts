@@ -115,7 +115,28 @@ async function playlistCreate(
   return { notice: `The playlist “${title}” was made.` }
 }
 
+/** "Send to YouTube" from Drive: queues the copy, which a background job does in pieces. */
+async function fromDrive(
+  cms: PluginContext,
+  { user, form }: AdminActionContext,
+): Promise<AdminActionResult> {
+  const field = formFields(form)
+  const changes = readChanges(field)
+  const playlist = readPlaylist(field)
+  const as = await accountOf(cms, user, form)
+  const { startCopy } = await import('./copy')
+  await atGoogle(() =>
+    startCopy(cms, user, { accountId: as.accountId, fileId: field('drive'), changes, playlist }),
+  )
+  return {
+    redirect: listUrl(cms, as),
+    notice:
+      'The copy from Drive has started. The video shows here once YouTube has it: a large one takes a while.',
+  }
+}
+
 export {
+  fromDrive as 'youtube-from-drive',
   save as 'youtube-save',
   remove as 'youtube-delete',
   playlistAdd as 'youtube-playlist-add',

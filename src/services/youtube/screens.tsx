@@ -501,6 +501,8 @@ export function VideoScreen({ cms, data }: AdminPageProps<VideoData> & { cms: Pl
 export interface UploadData extends Base {
   categories: Category[]
   playlists: Playlist[]
+  /** A Drive file to copy, when the screen was opened from Drive's "Send to YouTube". */
+  drive: { id: string; name: string; bytes: number | null; usable: boolean } | null
 }
 
 export async function loadUpload(
@@ -509,17 +511,36 @@ export async function loadUpload(
 ): Promise<UploadData | null> {
   const data = await base(cms, context)
   if (!data) return null
-  if (!data.as || !data.channel) return { ...data, categories: [], playlists: [] }
+  if (!data.as || !data.channel) return { ...data, categories: [], playlists: [], drive: null }
   try {
-    const [categories, playlists] = await Promise.all([
+    const [categories, playlists, drive] = await Promise.all([
       listCategories(cms, data.as),
       listPlaylists(cms, data.as),
+      driveSource(cms, context, data.as),
     ])
-    return { ...data, categories, playlists }
+    return { ...data, categories, playlists, drive }
   } catch (error) {
     if (!(error instanceof GoogleError)) throw error
-    return { ...data, categories: [], playlists: [], problem: error }
+    return { ...data, categories: [], playlists: [], drive: null, problem: error }
   }
+}
+
+/** The Drive file the address names, when this account may read Drive and the file is a video. */
+async function driveSource(
+  cms: PluginContext,
+  { user, searchParams }: AdminPageContext,
+  as: As,
+): Promise<UploadData['drive']> {
+  const id = first(searchParams.drive) ?? ''
+  if (!/^[A-Za-z0-9_-]{1,200}$/.test(id)) return null
+  const { requireAccount } = await import('../shared')
+  if (!(await requireAccount(cms, user, 'drive', as.accountId))) {
+    return { id, name: '', bytes: null, usable: false }
+  }
+  const { getFile } = await import('../drive/client')
+  const file = await getFile(cms, as.userId, as.accountId, id)
+  const video = file.kind === 'file' && file.mimeType.startsWith('video/') && !file.trashed
+  return { id, name: file.name, bytes: file.size, usable: video && Boolean(file.size) }
 }
 
 export function UploadScreen({ cms, data }: AdminPageProps<UploadData> & { cms: PluginContext }) {
@@ -530,7 +551,39 @@ export function UploadScreen({ cms, data }: AdminPageProps<UploadData> & { cms: 
       <p>
         <a href={`${cms.admin.url('/youtube')}${data.query}`}>← Videos</a>
       </p>
-      {data.as && data.channel && data.categories.length > 0 && (
+      {data.as && data.channel && data.categories.length > 0 && data.drive && (
+        <form method="post" action={cms.admin.actionUrl('youtube-from-drive')}>
+          <input type="hidden" name="account" value={data.as.accountId} />
+          <input type="hidden" name="drive" value={data.drive.id} />
+          <FormTable>
+            <FormField
+              label="The file"
+              description={
+                data.drive.usable
+                  ? 'Copied from Google Drive to YouTube by this site, in pieces, in the background. You can close this tab.'
+                  : undefined
+              }
+            >
+              {data.drive.usable
+                ? `From Google Drive: ${data.drive.name}`
+                : data.drive.name
+                  ? `${data.drive.name} in Google Drive isn’t a video YouTube can take.`
+                  : 'This account hasn’t allowed Drive, so the file can’t be read.'}
+            </FormField>
+          </FormTable>
+          {data.drive.usable && (
+            <>
+              <VideoFields
+                video={{ title: data.drive.name.replace(/\.[A-Za-z0-9]{2,5}$/, '') }}
+                categories={data.categories}
+                playlists={data.playlists}
+              />
+              <SubmitButton>Copy to YouTube</SubmitButton>
+            </>
+          )}
+        </form>
+      )}
+      {data.as && data.channel && data.categories.length > 0 && !data.drive && (
         <>
           {/* No action: the script sends the file to YouTube itself, then the form's fields here. */}
           <form

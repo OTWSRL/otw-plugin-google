@@ -41,7 +41,38 @@ export interface GoogleService {
   enabled(): boolean
 }
 
+/** What the job that copies a video from Drive to YouTube is given, and carries between its runs. */
+export interface YouTubeCopy {
+  userId: string
+  accountId: string
+  /** The Drive file. */
+  fileId: string
+  changes: {
+    title: string
+    description: string
+    tags: string[]
+    categoryId: string
+    privacy: 'private' | 'unlisted' | 'public'
+    publishAt: string | null
+    madeForKids: boolean
+  }
+  playlist: string | null
+  bytes: number
+  type: string
+  /** YouTube's address for the upload, encrypted, once a run has opened it. */
+  session?: string
+  /** How many bytes YouTube has confirmed. */
+  offset?: number
+  /** For tests: a smaller piece, and a shorter run. */
+  piece?: number
+  budgetMs?: number
+}
+
 declare module '@otwdesign/sdk' {
+  interface Jobs {
+    /** Copies a video from a person's Drive to their YouTube channel, a piece at a time. */
+    'google.youtube_from_drive': YouTubeCopy
+  }
   interface Registries {
     /** Google's services, for the accounts screen and for asking for their permission. */
     'google.services': GoogleService

@@ -176,6 +176,15 @@ export default definePlugin({
     driveRoutes(cms)
     gmailRoutes(cms)
 
+    // A video from Drive to YouTube, on the server, for "Send to YouTube": queued by a form,
+    // run in pieces. Defining it costs nothing until one is queued.
+    cms.jobs.define('google.youtube_from_drive', {
+      label: 'Copy a video from Drive to YouTube',
+      attempts: 4,
+      timeoutSeconds: 180,
+      handler: async (args) => (await import('./services/youtube/copy')).runCopy(cms, args),
+    })
+
     // The site's email through Gmail. One plugin sends the site's email: Mailer does when it's
     // active, whatever this setting says.
     if (cms.settings.get('google.site_mail') === true && !cms.isActive('mailer')) {

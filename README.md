@@ -8,8 +8,8 @@ it.
   service asks Google for its own permission the first time it's allowed, never all at once.
 - **Continue with Google**: on the admin's sign-in page and on the account page. Someone new can
   get an account, with a role that opens the Google screens and nothing else.
-- **YouTube**: the channel's videos, their details and visibility, playlists, and uploads that go
-  from the browser straight to YouTube.
+- **YouTube**: the channel's videos, their details and visibility, playlists, uploads that go
+  from the browser straight to YouTube, and copies of a Drive video made in the background.
 - **Drive**: folders and files, search, the trash, downloads and previews, uploads from the
   browser straight to Drive, and copies into the Media library.
 - **Gmail**: labels, threads, search, reading, writing, replying, drafts and attachments.
@@ -111,17 +111,26 @@ Google for the permission to send, nothing more.
 
 ## What it costs a site
 
-Installed and active, the plugin loads its small definition file and nothing else until someone
-uses it:
+Installed and active, the plugin loads its definition and nothing else until someone uses it.
+Measured on its test site, built once without the plugin and once with it (November 2026):
 
-- **Site pages**: the same HTML, JavaScript and CSS as without the plugin. No request, no query.
-- **Other admin screens**: the same, plus the menu entry for people who may use Google.
-- **Sign-in pages**: one link, with no script, while Continue with Google is on.
-- **The server**: each service's code is imported the first time its screen or route is used.
-- **The browser**: the plugin's only script is the uploader, which the two upload screens fetch.
+| Where                               | Without the plugin | With it, active | The difference                                   |
+| ----------------------------------- | ------------------ | --------------- | ------------------------------------------------ |
+| Browser files of the whole build    | 1,017,472 B script | 1,017,472 B     | None: no file differs                            |
+| A site page (HTML)                  | 11,682 B           | 11,682 B        | None                                             |
+| The sign-in pages (HTML)            | 16,504 B           | 19,251 B        | The Continue with Google link, 0.8 KB compressed |
+| Another admin screen (HTML)         | 30,920 B           | 32,992 B        | The menu entry, 0.5 KB compressed                |
+| Time per request, six kinds of page | 2.8 to 4.6 ms      | 2.8 to 4.6 ms   | Within 0.2 ms either way: not measurable         |
 
-`test/lazy.test.ts` holds the plugin to this: it fails if the main entry or the admin entry
-imports anything but names.
+- **The server** had loaded only the plugin's definition after site pages, the sign-in pages,
+  five other admin screens and the cron route. Opening Google › Accounts then loaded 3 more
+  files (24 KB), YouTube 3 more (20 KB), and the uploader script 1 (5 KB). Drive, Gmail, the
+  connect flow and the mailer stayed unloaded until used.
+- **The browser** gets the plugin's only script, the uploader, on the two upload screens.
+- **A site page runs nothing of the plugin**: no request, no query.
+
+`test/lazy.test.ts` holds the plugin to this. It fails if the main entry reaches a component by
+any import, which is how a first build came to send 1,042 bytes of script to every site page.
 
 ## Security
 

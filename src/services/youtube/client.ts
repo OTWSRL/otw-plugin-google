@@ -327,7 +327,8 @@ export async function openUpload(
     headers: {
       'x-upload-content-length': String(input.bytes),
       'x-upload-content-type': input.type,
-      origin: input.origin,
+      // The site's address when a browser will send the file; none when this server does.
+      ...(input.origin ? { origin: input.origin } : {}),
     },
   })
   const session = response.headers.get('location') ?? ''

@@ -51,6 +51,7 @@ export function registerAdmin(cms: PluginContext): void {
     'youtube-delete',
     'youtube-playlist-add',
     'youtube-playlist-create',
+    'youtube-from-drive',
   ] as const) {
     cms.admin.action({
       name,
