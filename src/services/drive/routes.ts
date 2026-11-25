@@ -22,12 +22,12 @@ export function registerRoutes(cms: PluginContext): void {
     method: 'POST',
     path: '/drive/uploads',
     handler: async (request, context) =>
-      (await import('./upload')).openRoute(cms, request, context),
+      (await import('./upload-api')).openRoute(cms, request, context),
   })
   cms.routes.api({
     method: 'POST',
     path: '/drive/uploads/done',
     handler: async (request, context) =>
-      (await import('./upload')).doneRoute(cms, request, context),
+      (await import('./upload-api')).doneRoute(cms, request, context),
   })
 }

@@ -2,7 +2,8 @@ import { FormField, FormTable, ListTable, Notice, SubmitButton } from '@otwdesig
 import type { AdminPageContext, AdminPageProps, PluginContext } from '@otwdesign/sdk'
 import { GoogleError } from '../../google'
 import { AccountSwitch, GoogleProblem, GoogleStyles, longDate } from '../../screens/parts'
-import { NoAccount, serviceAccounts, type ServiceAccounts } from '../shared'
+import { NoAccount } from '../../screens/no-account'
+import { serviceAccounts, type ServiceAccounts } from '../shared'
 import {
   getVideo,
   listCategories,

@@ -41,9 +41,9 @@ export function registerAdmin(cms: PluginContext): void {
     name: 'drive-upload',
     path: '/drive/upload',
     capability: USE,
-    load: async (context) => (await import('./upload')).loadUpload(cms, context),
+    load: async (context) => (await import('./upload-screen')).loadUpload(cms, context),
     title: 'Upload to Drive',
-    component: async (props) => (await import('./upload')).UploadScreen({ cms, ...props }),
+    component: async (props) => (await import('./upload-screen')).UploadScreen({ cms, ...props }),
   })
 
   for (const name of ACTIONS) {

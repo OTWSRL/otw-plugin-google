@@ -2,7 +2,8 @@ import { FormButton, ListTable, Notice } from '@otwdesign/admin-ui'
 import type { AdminPageContext, AdminPageProps, PluginContext } from '@otwdesign/sdk'
 import { GoogleError } from '../../google'
 import { AccountSwitch, GoogleProblem, GoogleStyles } from '../../screens/parts'
-import { NoAccount, serviceAccounts, type ServiceAccounts } from '../shared'
+import { NoAccount } from '../../screens/no-account'
+import { serviceAccounts, type ServiceAccounts } from '../shared'
 import { addressOf, splitList } from './address'
 import {
   ALL_MAIL,

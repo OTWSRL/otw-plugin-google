@@ -3,7 +3,8 @@ import type { AdminPageContext, AdminPageProps, PluginContext } from '@otwdesign
 import type { ReactNode } from 'react'
 import { GoogleError } from '../../google'
 import { AccountSwitch, GoogleProblem, GoogleStyles, longDate } from '../../screens/parts'
-import { NoAccount, serviceAccounts, type ServiceAccounts } from '../shared'
+import { NoAccount } from '../../screens/no-account'
+import { serviceAccounts, type ServiceAccounts } from '../shared'
 import { previewable } from './api'
 import {
   cleanQuery,

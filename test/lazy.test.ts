@@ -1,5 +1,5 @@
 import { existsSync, readdirSync, readFileSync } from 'node:fs'
-import { join } from 'node:path'
+import { dirname, join } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { describe, expect, it, vi } from 'vitest'
 
@@ -25,6 +25,7 @@ vi.mock('../src/sign-in', track('sign-in'))
 vi.mock('../src/screens/accounts', track('screens/accounts'))
 vi.mock('../src/screens/parts', track('screens/parts'))
 vi.mock('../src/services/shared', track('services/shared'))
+vi.mock('../src/screens/no-account', track('screens/no-account'))
 
 // The folder has a space in its path, which a URL's pathname keeps encoded.
 const SRC = fileURLToPath(new URL('../src/', import.meta.url))
@@ -120,6 +121,56 @@ describe('the files every request loads', () => {
         const heavy = imports(`services/${id}/${file}`).filter((name) => !allowed.has(name))
         expect({ file: `${id}/${file}`, heavy }).toEqual({ file: `${id}/${file}`, heavy: [] })
       }
+    }
+  })
+
+  /**
+   * Every file the main entry can reach, by an import or by `import()`: Next.js sends a page the
+   * browser code of whatever its server files can reach, used or not, and the site's pages
+   * import the main entry. So nothing here may import a component.
+   */
+  function reachable(entry: string): Map<string, string[]> {
+    const seen = new Map<string, string[]>()
+    const queue = [entry]
+    while (queue.length > 0) {
+      const file = queue.pop()!
+      if (seen.has(file)) continue
+      const source = readFileSync(join(SRC, file), 'utf8')
+        // A type-only import or export is erased: it loads nothing.
+        .replace(/^(?:import|export) type\b[^;]*?from\s+['"][^'"]+['"]/gms, '')
+      const names = [
+        ...source.matchAll(/(?:\bfrom\s+|\bimport\s*\(\s*|^import\s+)['"]([^'"]+)['"]/gm),
+      ].map((match) => match[1]!)
+      seen.set(
+        file,
+        names.filter((name) => !name.startsWith('.')),
+      )
+      for (const name of names.filter((item) => item.startsWith('.'))) {
+        const base = join(dirname(file), name)
+        const found = [`${base}.ts`, `${base}.tsx`, join(base, 'index.ts')].find((candidate) =>
+          existsSync(join(SRC, candidate)),
+        )
+        if (!found) throw new Error(`${file} imports ${name}, which isn't a file`)
+        queue.push(found)
+      }
+    }
+    return seen
+  }
+
+  it('nothing the main entry can reach, by import or by import(), is a component or imports one', () => {
+    const graph = reachable('index.tsx')
+    // The entry itself, its light files, and the code behind the routes: all reached, none JSX.
+    expect([...graph.keys()]).toEqual(
+      expect.arrayContaining(['oauth.ts', 'accounts.ts', 'mail.ts']),
+    )
+    expect([...graph.keys()].filter((file) => file.endsWith('.tsx'))).toEqual(['index.tsx'])
+    const outside = new Set([...graph.values()].flat())
+    for (const name of outside) {
+      expect(
+        name.startsWith('node:') ||
+          ['@otwdesign/sdk', 'drizzle-orm', 'drizzle-orm/pg-core'].includes(name),
+        `the main entry reaches ${name}`,
+      ).toBe(true)
     }
   })
 
