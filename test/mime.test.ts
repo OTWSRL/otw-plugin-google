@@ -28,6 +28,11 @@ describe('an address', () => {
   })
 
   it('can’t carry a second address or a header in its own', () => {
+    // A name with an address of its own in brackets would show one and send to another.
+    expect(formatAddress('Grace <grace@example.com> <spy@evil.test>')).toBe(
+      '"Grace grace@example.com" <spy@evil.test>',
+    )
+    expect(formatAddress('<> <a@example.com>')).toBe('a@example.com')
     expect(formatAddress('a@example.com>, <evil@example.com')).not.toContain(',')
     expect(formatAddress('Ada <a@example.com>\r\nBcc: evil@example.com')).not.toMatch(/[\r\n]/)
     expect(formatAddress('a@example.com\r\nBcc: evil@example.com')).toBe(

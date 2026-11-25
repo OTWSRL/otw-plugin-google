@@ -67,7 +67,10 @@ export function formatAddress(value: string): string {
   // What could end the address early, or start another, never reaches the header.
   const clean = address.replace(/[\s<>,;"]/g, '')
   if (!name) return clean
-  const shown = ASCII.test(name) ? `"${name.replace(/["\\]/g, '\\$&')}"` : encodedWords(name)
+  // A name can't carry brackets: `A <b@x> <c@y>` would show one address and send to another.
+  const label = name.replace(/[<>]/g, '').trim()
+  if (!label) return clean
+  const shown = ASCII.test(label) ? `"${label.replace(/["\\]/g, '\\$&')}"` : encodedWords(label)
   return `${shown} <${clean}>`
 }
 

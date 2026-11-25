@@ -166,7 +166,7 @@ describe('an API’s answer', () => {
       (caught: unknown) => caught as GoogleError,
     )
     expect(error.message.startsWith('Google refused: Bad name')).toBe(true)
-    expect(error.message).not.toMatch(/[\r\n\u0000]/)
+    expect(/\p{Cc}/u.test(error.message)).toBe(false)
     expect(error.message.length).toBeLessThan(330)
   })
 
