@@ -113,20 +113,25 @@ Google for the permission to send, nothing more.
 ## What it costs a site
 
 Installed and active, the plugin loads its definition and nothing else until someone uses it.
-Measured on its test site, built once without the plugin and once with it (November 2026):
+Measured with OTW CMS 1.11 and this plugin 1.1, on a site built from npm once without the plugin
+and once with it (November 2026):
 
-| Where                               | Without the plugin | With it, active | The difference                                   |
-| ----------------------------------- | ------------------ | --------------- | ------------------------------------------------ |
-| Browser files of the whole build    | 1,017,472 B script | 1,017,472 B     | None: no file differs                            |
-| A site page (HTML)                  | 11,682 B           | 11,682 B        | None                                             |
-| The sign-in pages (HTML)            | 16,504 B           | 19,251 B        | The Continue with Google link, 0.8 KB compressed |
-| Another admin screen (HTML)         | 30,920 B           | 32,992 B        | The menu entry, 0.5 KB compressed                |
-| Time per request, six kinds of page | 2.8 to 4.6 ms      | 2.8 to 4.6 ms   | Within 0.2 ms either way: not measurable         |
+| Where                            | Without the plugin | With it, active | The difference                                               |
+| -------------------------------- | ------------------ | --------------- | ------------------------------------------------------------ |
+| Browser files of the whole build | 1,068,864 B script | 1,068,864 B     | None: the same files                                         |
+| A site page (HTML)               | 11,581 B           | 11,581 B        | None                                                         |
+| The admin's sign-in page (HTML)  | 16,468 B           | 17,377 B        | The Continue with Google link, 0.2 KB compressed             |
+| The account sign-in page (HTML)  | 14,093 B           | 14,861 B        | The same link, 0.2 KB compressed                             |
+| Another admin screen (HTML)      | 35,102 B           | 35,842 B        | Google's menu link and Settings › Google, 0.15 KB compressed |
+| Time per request                 | 3.2 to 5.0 ms      | 3.2 to 5.1 ms   | Within 0.2 ms either way: not measurable                     |
 
-- **The server** had loaded only the plugin's definition after site pages, the sign-in pages,
-  five other admin screens and the cron route. Opening Google › Accounts then loaded 3 more
-  files (24 KB), YouTube 3 more (20 KB), and the uploader script 1 (5 KB). Drive, Gmail, the
-  connect flow and the mailer stayed unloaded until used.
+Google's mark and its menu icon are files the browser fetches once and keeps, not part of each
+page; a click between admin screens or Google's tabs sends the screen alone.
+
+- **The server**, measured with 1.0, had loaded only the plugin's definition after site pages,
+  the sign-in pages, five other admin screens and the cron route. Opening Google › Accounts then
+  loaded 3 more files (24 KB), YouTube 3 more (20 KB), and the uploader script 1 (5 KB). Drive,
+  Gmail, the connect flow and the mailer stayed unloaded until used.
 - **The browser** gets the plugin's only script, the uploader, on the two upload screens.
 - **A site page runs nothing of the plugin**: no request, no query.
 
