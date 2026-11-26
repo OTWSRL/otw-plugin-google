@@ -10,8 +10,9 @@ name: Release
 # Like CI, each job checks out the CMS next to the plugin (../nextjs-cms), which the repo links
 # for development; the published plugin takes the CMS from npm through its peer dependencies.
 #
-# On npmjs.com, @otwdesign/plugin-otp names this repository and this workflow file
-# (release.yml) as its trusted publisher.
+# On npmjs.com, @otwdesign/plugin-google names this repository and this workflow file
+# (release.yml) as its trusted publisher. Until its first version is published by hand and that
+# publisher is saved, the publish job here fails: npm has no package to trust a workflow for.
 
 on:
   workflow_run:
