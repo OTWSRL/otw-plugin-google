@@ -295,7 +295,12 @@ function apiError(status: number, body: unknown): GoogleError {
   )
 }
 
+/**
+ * What a request to a Google API sends besides its address, as `cms.services.get('google').fetch()`
+ * takes it. The account's token is added by the plugin, never by the caller.
+ */
 export interface ApiRequest {
+  /** `GET` when left out. Only a `GET` follows Google to another host, and without the token. */
   method?: 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE'
   /** Query parameters; lists repeat the name, and `undefined` leaves one out. */
   query?: Record<string, string | number | boolean | readonly string[] | undefined>
@@ -303,7 +308,9 @@ export interface ApiRequest {
   json?: unknown
   /** Sent as it is, with these headers: an upload's bytes, a multipart body. */
   body?: BodyInit
+  /** More headers. An `Authorization` header here, however spelled, gives way to the token. */
   headers?: Record<string, string>
+  /** How long to wait for Google before giving up, in milliseconds: 30 seconds when left out. */
   timeoutMs?: number
 }
 
@@ -325,14 +332,14 @@ export function apiRequest(
   url: string,
   request: ApiRequest = {},
 ): Promise<Response> {
-  const headers: Record<string, string> = {
-    accept: 'application/json',
-    ...request.headers,
-    authorization: `Bearer ${token}`,
-  }
+  // Headers, not a plain object: names are one whatever their case, so the caller's
+  // `Authorization` can't travel beside the account's token.
+  const headers = new Headers({ accept: 'application/json' })
+  for (const [name, value] of Object.entries(request.headers ?? {})) headers.set(name, value)
+  headers.set('authorization', `Bearer ${token}`)
   let body = request.body
   if (request.json !== undefined) {
-    headers['content-type'] = 'application/json'
+    headers.set('content-type', 'application/json')
     body = JSON.stringify(request.json)
   }
   return send(

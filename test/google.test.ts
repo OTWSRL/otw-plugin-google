@@ -237,3 +237,26 @@ describe('a request that Google sends on to another host', () => {
     }
   })
 })
+
+describe('a request’s headers', () => {
+  it('carry the account’s token, whatever the caller put there, however spelled', async () => {
+    const seen: IncomingHttpHeaders[] = []
+    const server = createServer((request, response) => {
+      seen.push(request.headers)
+      response.writeHead(200, { 'content-type': 'application/json' }).end('{}')
+    })
+    await new Promise<void>((resolve) => server.listen(0, '127.0.0.1', resolve))
+    try {
+      const url = `http://127.0.0.1:${(server.address() as AddressInfo).port}/`
+      for (const name of ['Authorization', 'authorization', 'AUTHORIZATION']) {
+        await apiRequest('the-token', url, { headers: { [name]: 'Bearer another', 'x-mine': '1' } })
+      }
+      expect(seen.map((headers) => headers.authorization)).toEqual(
+        Array(3).fill('Bearer the-token'),
+      )
+      expect(seen.every((headers) => headers['x-mine'] === '1')).toBe(true)
+    } finally {
+      await new Promise((done) => server.close(done))
+    }
+  })
+})
