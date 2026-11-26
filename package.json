@@ -1,6 +1,6 @@
 {
   "name": "@otwdesign/plugin-google",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "Google for OTW CMS: sign in with Google, and each person's own YouTube, Drive and Gmail in the admin. The site's email can go out through Gmail.",
   "license": "Apache-2.0",
   "author": "OTW SRL",

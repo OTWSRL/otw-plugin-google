@@ -58,7 +58,7 @@ const GOOGLE_MARK = svg(
 
 export default definePlugin({
   id: 'google',
-  version: '1.0.0',
+  version: '1.1.0',
   name: 'Google',
   description:
     'Sign in with Google, and each person’s own YouTube, Drive and Gmail in the admin. The site’s email can go out through Gmail.',
