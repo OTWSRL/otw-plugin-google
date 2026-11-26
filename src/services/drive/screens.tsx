@@ -113,14 +113,12 @@ function DriveStyles() {
 }
 
 const ICONS = {
-  folder: <path d="M2 5.500h5.500l1.600 2H18v8.500H2Z" fill="#8c8f94" />,
+  folder: <path d="M2 5.5h5.5l1.6 2H18v8.5H2Z" fill="#8c8f94" />,
   google: <path d="M4 2h8l4 4v12H4Z" fill="#3858e9" />,
-  video: (
-    <path d="M2.500 4h15v12h-15ZM8.200 7.200v5.600L13 10Z" fill="#d63638" fillRule="evenodd" />
-  ),
+  video: <path d="M2.5 4h15v12h-15ZM8.2 7.2v5.6L13 10Z" fill="#d63638" fillRule="evenodd" />,
   image: (
     <path
-      d="M2.500 4h15v12h-15ZM4.500 14l3.600-4.400 2.600 3 1.800-1.800 3 3.200Z"
+      d="M2.5 4h15v12h-15ZM4.5 14l3.6-4.4 2.6 3 1.8-1.8 3 3.2Z"
       fill="#9a4d00"
       fillRule="evenodd"
     />
