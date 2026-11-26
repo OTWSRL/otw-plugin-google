@@ -152,7 +152,10 @@ describe('the way back', () => {
     // No session, no cookie, a cookie changed, another state.
     expect((await site.back(null, left.cookie, callback)).outcome).toBe('expired')
     expect((await site.back(ada, null, callback)).outcome).toBe('expired')
-    const forged = left.cookie!.slice(0, -1) + (left.cookie!.endsWith('A') ? 'B' : 'A')
+    // The signature's first character changed: other bytes, whatever the signature was.
+    const at = left.cookie!.lastIndexOf('.') + 1
+    const swapped = left.cookie![at] === 'A' ? 'Q' : 'A'
+    const forged = left.cookie!.slice(0, at) + swapped + left.cookie!.slice(at + 1)
     expect((await site.back(ada, forged, callback)).outcome).toBe('expired')
     const other = new URL(callback)
     other.searchParams.set('state', 'x'.repeat(43))

@@ -66,11 +66,9 @@ export function createSealer(material: string): Sealer {
       }
     },
     sign: (purpose, payload) => mac(purpose, payload).toString('base64url'),
-    verify(purpose, payload, signature) {
-      const expected = mac(purpose, payload)
-      const actual = Buffer.from(signature, 'base64url')
-      return actual.length === expected.length && timingSafeEqual(actual, expected)
-    },
+    // Compared as written: decoding first would let one signature pass in more than one spelling.
+    verify: (purpose, payload, signature) =>
+      sameText(signature, mac(purpose, payload).toString('base64url')),
   }
 }
 

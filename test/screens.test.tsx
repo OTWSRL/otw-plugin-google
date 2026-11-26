@@ -197,6 +197,20 @@ describe('the keys', () => {
     expect(() => createSealer('')).toThrow()
   })
 
+  it('take a signature only as it was written', () => {
+    const sealer = createSealer('a client secret')
+    const signature = sealer.sign('connect', 'payload')
+    // 32 bytes are 43 characters, and the last one carries only 4 bits: the character next to
+    // it in the alphabet decodes to the same bytes. One signature, one spelling.
+    const alphabet = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_'
+    const last = alphabet.indexOf(signature.at(-1)!)
+    const respelled = signature.slice(0, -1) + alphabet[last ^ 1]
+    expect(Buffer.from(respelled, 'base64url')).toEqual(Buffer.from(signature, 'base64url'))
+    expect(sealer.verify('connect', 'payload', respelled)).toBe(false)
+    expect(sealer.verify('connect', 'payload', `${signature}=`)).toBe(false)
+    expect(sealer.verify('connect', 'payload', '')).toBe(false)
+  })
+
   it('use a token key of their own when the site has one, so a new client secret loses nothing', async () => {
     const site = await bootGoogle({
       settings: { 'google.token_key': 'a long key just for the tokens' },
