@@ -1,12 +1,15 @@
 import { defineAdmin } from '@otwdesign/sdk'
 import { MANAGE, USE } from './config'
 import google from './index'
+import { withTabs } from './screens/tabbed'
 import { registerAdmin as driveAdmin } from './services/drive/admin'
 import { registerAdmin as gmailAdmin } from './services/gmail/admin'
 import { registerAdmin as youtubeAdmin } from './services/youtube/admin'
 
 // The admin entry: the screens' names, addresses and who may open them. Each screen's code is
-// imported when that screen is opened, so the admin's other screens carry none of it.
+// imported when that screen is opened, so the admin's other screens carry none of it. Google has
+// one link in the menu, to Accounts; the services are tabs across its screens (`screens/tabs`),
+// and its settings are under Settings, as a WordPress plugin's are.
 
 export default defineAdmin(google, (cms) => {
   cms.admin.page({
@@ -17,10 +20,15 @@ export default defineAdmin(google, (cms) => {
     load: async (context) => (await import('./screens/accounts')).loadAccounts(cms, context),
     title: 'Google accounts',
     titleAction: () => ({ label: 'Connect an account', url: cms.routes.apiUrl('/oauth/start') }),
-    component: async (props) => {
-      const { AccountsScreen } = await import('./screens/accounts')
-      return <AccountsScreen cms={cms} {...props} />
-    },
+    component: async (props) =>
+      withTabs(
+        cms,
+        props.user,
+        'accounts',
+        import('./screens/accounts').then(({ AccountsScreen }) => (
+          <AccountsScreen cms={cms} {...props} />
+        )),
+      ),
   })
 
   for (const name of ['disconnect', 'sends-mail'] as const) {
@@ -47,7 +55,7 @@ export default defineAdmin(google, (cms) => {
     path: '/settings',
     title: 'Google settings',
     capability: MANAGE,
-    menu: { label: 'Settings', order: 90, parent: 'google' },
+    menu: { label: 'Google', parent: 'settings' },
   })
   cms.admin.settingsSection({
     name: 'client',
@@ -63,7 +71,7 @@ export default defineAdmin(google, (cms) => {
     page: 'google.settings',
     title: 'What people can use',
     description:
-      'A service you switch off leaves the menu, and nobody is asked for its permission. Each asks Google only for what it needs, the first time someone opens it.',
+      'A service you switch off loses its tab, and nobody is asked for its permission. Each asks Google only for what it needs, the first time someone opens it.',
     fields: ['google.roles', 'google.youtube', 'google.drive', 'google.gmail'],
   })
   cms.admin.settingsSection({

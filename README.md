@@ -22,8 +22,9 @@ it.
 npx cms plugin add @otwdesign/plugin-google
 ```
 
-or from the admin, **Plugins › Add Plugin**. It needs OTW CMS 1.10 or later. Activate **Google**
-on the Plugins screen.
+or from the admin, **Plugins › Add Plugin**. It needs OTW CMS 1.11 or later. Activate **Google**
+on the Plugins screen. **Google** is one link in the menu: YouTube, Drive and Gmail are tabs across
+its screens, and its settings are under **Settings › Google**.
 
 ## Set up Google
 
@@ -37,7 +38,7 @@ You bring your own Google client: each site is its own "app" at Google.
    redirect addresses that **Google › Accounts** shows in its Setup box:
    - `https://your-site/api/p/google/oauth/callback` (connecting accounts)
    - `https://your-site/api/p/core/sign-in/google/callback` (Continue with Google)
-4. Put the client's ID under **Google › Settings**, and its secret in the site's environment:
+4. Put the client's ID under **Settings › Google**, and its secret in the site's environment:
 
 ```sh
 GOOGLE_CLIENT_SECRET=…
@@ -49,7 +50,7 @@ whatever the request arrived on.
 | Variable               | What it is                                                                                                 |
 | ---------------------- | ---------------------------------------------------------------------------------------------------------- |
 | `GOOGLE_CLIENT_SECRET` | The OAuth client's secret. Read from the environment only: never stored, never shown.                      |
-| `GOOGLE_CLIENT_ID`     | Optional: the client's ID, instead of typing it under Google › Settings.                                   |
+| `GOOGLE_CLIENT_ID`     | Optional: the client's ID, instead of typing it under Settings › Google.                                   |
 | `GOOGLE_TOKEN_KEY`     | Optional: a long random string that encrypts the stored tokens. Without it, the key comes from the secret. |
 | `GOOGLE_API_URL`       | For tests only: an address that stands in for Google's servers. Never set it on a live site.               |
 
@@ -74,7 +75,7 @@ These are Google's rules for your client, not the plugin's:
 
 | Capability      | Who has it                               | What it allows                                                        |
 | --------------- | ---------------------------------------- | --------------------------------------------------------------------- |
-| `google.use`    | The roles ticked under Google › Settings | Connect their own Google accounts and use the services with them      |
+| `google.use`    | The roles ticked under Settings › Google | Connect their own Google accounts and use the services with them      |
 | `google.manage` | Administrators                           | The settings, the Setup box, and seeing and disconnecting any account |
 
 An account is used only by the person who connected it. An administrator sees that someone's
@@ -97,7 +98,7 @@ own profile.
 
 ## The site's email
 
-Tick **Send the site's email through Gmail** under Google › Settings, then choose the account
+Tick **Send the site's email through Gmail** under Settings › Google, then choose the account
 with **Use for the site's email** on one of your own accounts under Google › Accounts. It asks
 Google for the permission to send, nothing more.
 

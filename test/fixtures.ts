@@ -155,3 +155,13 @@ export async function bootGoogle(options: BootOptions = {}) {
 }
 
 export type GoogleSite = Awaited<ReturnType<typeof bootGoogle>>
+
+/** A screen's tabs, by label, the current one marked with `*`. */
+export const tabsOf = (html: string) =>
+  [
+    ...(html.match(/<nav class="nav-tab-wrapper".*?<\/nav>/s)?.[0] ?? '').matchAll(
+      /<a ([^>]*)>([^<]+)<\/a>/g,
+    ),
+  ].map(
+    ([, attributes, label]) => `${label}${attributes!.includes('aria-current="page"') ? '*' : ''}`,
+  )

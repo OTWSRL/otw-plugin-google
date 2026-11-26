@@ -55,8 +55,8 @@
     "release": "changeset publish"
   },
   "peerDependencies": {
-    "@otwdesign/admin-ui": "^1.10.0",
-    "@otwdesign/sdk": "^1.10.0",
+    "@otwdesign/admin-ui": "^1.11.0",
+    "@otwdesign/sdk": "^1.11.0",
     "drizzle-orm": ">=0.45.0",
     "react": "^19.0.0"
   },

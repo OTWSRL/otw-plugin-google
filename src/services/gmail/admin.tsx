@@ -1,5 +1,6 @@
 import type { AdminActionContext, AdminActionResult, PluginContext } from '@otwdesign/sdk'
 import { USE } from '../../config'
+import { withTabs } from '../../screens/tabbed'
 // A type only: the module itself is imported when one of its actions is first posted to.
 import type * as ActionsModule from './actions'
 
@@ -32,7 +33,6 @@ export function registerAdmin(cms: PluginContext): void {
     name: 'gmail',
     path: '/gmail',
     capability: USE,
-    menu: { label: 'Gmail', order: 30 },
     load: async (context) => (await import('./screens')).loadMail(cms, context),
     title: 'Gmail',
     titleAction: ({ data }) =>
@@ -42,10 +42,13 @@ export function registerAdmin(cms: PluginContext): void {
             url: `${cms.admin.url('/gmail/compose')}?${new URLSearchParams({ account: data.found.current.id })}`,
           }
         : null,
-    component: async (props) => {
-      const { MailScreen } = await import('./screens')
-      return <MailScreen cms={cms} {...props} />
-    },
+    component: async (props) =>
+      withTabs(
+        cms,
+        props.user,
+        'gmail',
+        import('./screens').then(({ MailScreen }) => <MailScreen cms={cms} {...props} />),
+      ),
   })
 
   cms.admin.page({
@@ -54,10 +57,13 @@ export function registerAdmin(cms: PluginContext): void {
     capability: USE,
     load: async (context) => (await import('./screens')).loadCompose(cms, context),
     title: ({ data }) => data.heading,
-    component: async (props) => {
-      const { ComposeScreen } = await import('./screens')
-      return <ComposeScreen cms={cms} {...props} />
-    },
+    component: async (props) =>
+      withTabs(
+        cms,
+        props.user,
+        'gmail',
+        import('./screens').then(({ ComposeScreen }) => <ComposeScreen cms={cms} {...props} />),
+      ),
   })
 
   for (const change of THREAD_ACTIONS) {

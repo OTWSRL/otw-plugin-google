@@ -107,13 +107,16 @@ describe('the files every request loads', () => {
       ...LIGHT,
       ...OUTSIDE,
       ...services.map((id) => `./services/${id}/admin`),
+      './screens/tabbed',
     ])
     expect(imports('admin.tsx').filter((name) => !allowed.has(name))).toEqual([])
+    // It puts the tabs above a screen, and imports them with the screen.
+    expect(imports('screens/tabbed.ts').filter((name) => !OUTSIDE.has(name))).toEqual([])
   })
 
   it('a service’s routes and screens lists import nothing but names', () => {
     expect(services.sort()).toEqual(['drive', 'gmail', 'youtube'])
-    const allowed = new Set([...OUTSIDE, '../../config'])
+    const allowed = new Set([...OUTSIDE, '../../config', '../../screens/tabbed'])
     for (const id of services) {
       // A screens list may be written with JSX.
       const admin = existsSync(join(SRC, `services/${id}/admin.tsx`)) ? 'admin.tsx' : 'admin.ts'

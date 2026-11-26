@@ -39,9 +39,12 @@ describe('the sign-in pages', () => {
         url: '/api/p/core/sign-in/google?screen=admin',
       },
     ])
-    expect(on.kernel.signInProviders('admin', null)[0]!.image).toMatch(
-      /^data:image\/svg\+xml;base64,/,
-    )
+    // Google's mark, from core's address for it, which browsers keep.
+    const image = on.kernel.signInProviders('admin', null)[0]!.image!
+    expect(image).toMatch(/^\/api\/p\/core\/sign-in\/google\/image\?v=[0-9a-f]{12}$/)
+    const mark = await on.get(image)
+    expect(mark.headers.get('content-type')).toBe('image/svg+xml')
+    expect(await mark.text()).toMatch(/^<svg xmlns="http:\/\/www.w3.org\/2000\/svg"/)
     expect((await boot({ unconfigured: true })).kernel.signInProviders('admin', null)).toEqual([])
     const off = await boot({ settings: { 'google.sign_in': false } })
     expect(off.kernel.signInProviders('admin', null)).toEqual([])

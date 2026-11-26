@@ -638,7 +638,7 @@ function ManageLabels({ cms, data }: Pick<MailProps, 'cms' | 'data'>) {
 
 export function MailScreen({ cms, data }: MailProps) {
   const { found, view } = data
-  if (!found) return <Notice type="warning">Gmail is switched off under Google › Settings.</Notice>
+  if (!found) return <Notice type="warning">Gmail is switched off under Settings › Google.</Notice>
   const here = cms.admin.url('/gmail')
   if (!found.current) {
     return (
@@ -856,7 +856,7 @@ export async function loadCompose(
 
 export function ComposeScreen({ cms, data }: AdminPageProps<ComposeData> & { cms: PluginContext }) {
   const { found, prefill } = data
-  if (!found) return <Notice type="warning">Gmail is switched off under Google › Settings.</Notice>
+  if (!found) return <Notice type="warning">Gmail is switched off under Settings › Google.</Notice>
   const here = cms.admin.url('/gmail/compose')
   if (!found.current) {
     return (

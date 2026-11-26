@@ -100,7 +100,7 @@ async function testMail(
     throw new ActionError('Enter an email address to send to.')
   if (cms.settings.get('google.site_mail') !== true) {
     throw new ActionError(
-      'Switch on “Send the site’s email through Gmail” under Google › Settings first.',
+      'Switch on “Send the site’s email through Gmail” under Settings › Google first.',
     )
   }
   if (!(await siteMailAccount(cms))) {

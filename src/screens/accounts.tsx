@@ -117,7 +117,7 @@ export function AccountsScreen({
         <Notice type="warning">
           <p>
             Google isn’t set up yet. Add the client ID under{' '}
-            <a href={cms.admin.url('/settings')}>Google › Settings</a> and its secret as{' '}
+            <a href={cms.admin.url('/settings')}>Settings › Google</a> and its secret as{' '}
             <code>GOOGLE_CLIENT_SECRET</code> in the site’s environment.
           </p>
         </Notice>
@@ -323,7 +323,7 @@ export function AccountsScreen({
               {data.setup.signIn
                 ? 'The sign-in pages show “Continue with Google”.'
                 : data.setup.configured
-                  ? 'Switched off under Google › Settings.'
+                  ? 'Switched off under Settings › Google.'
                   : 'Shown once the client is set up.'}
             </dd>
             <dt>The site’s email</dt>
@@ -331,7 +331,7 @@ export function AccountsScreen({
               {data.setup.mailerActive
                 ? 'Mailer is active and sends the site’s email.'
                 : !data.setup.siteMail
-                  ? 'Not sent through Gmail. Switch it on under Google › Settings.'
+                  ? 'Not sent through Gmail. Switch it on under Settings › Google.'
                   : data.setup.sender
                     ? `Goes out from ${data.setup.sender}.`
                     : 'Switched on, but no account is chosen: use “Use for the site’s email” on one of your accounts above.'}

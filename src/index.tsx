@@ -115,6 +115,7 @@ export default definePlugin({
         asks,
         scopes: [scope],
         enabled: () => cms.settings.get(setting) !== false,
+        screen: cms.admin.url(`/${id}`),
       }
       services.add(service)
     }

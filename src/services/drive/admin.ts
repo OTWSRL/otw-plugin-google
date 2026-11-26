@@ -1,5 +1,6 @@
 import type { PluginContext } from '@otwdesign/sdk'
 import { USE } from '../../config'
+import { withTabs } from '../../screens/tabbed'
 
 const ACTIONS = [
   'drive-new-folder',
@@ -20,7 +21,6 @@ export function registerAdmin(cms: PluginContext): void {
     name: 'drive',
     path: '/drive',
     capability: USE,
-    menu: { label: 'Drive', order: 20 },
     load: async (context) => (await import('./screens')).loadDrive(cms, context),
     title: 'Drive',
     titleAction: ({ data }) =>
@@ -30,11 +30,15 @@ export function registerAdmin(cms: PluginContext): void {
             url: `${cms.admin.url('/drive/upload')}?${new URLSearchParams({ account: data.found.current.id, folder: data.folder })}`,
           }
         : null,
-    component: async (props) => {
-      const { createElement } = await import('react')
-      const { DriveScreen } = await import('./screens')
-      return createElement(DriveScreen, { cms, ...props })
-    },
+    component: async (props) =>
+      withTabs(
+        cms,
+        props.user,
+        'drive',
+        Promise.all([import('react'), import('./screens')]).then(
+          ([{ createElement }, { DriveScreen }]) => createElement(DriveScreen, { cms, ...props }),
+        ),
+      ),
   })
 
   cms.admin.page({
@@ -43,7 +47,13 @@ export function registerAdmin(cms: PluginContext): void {
     capability: USE,
     load: async (context) => (await import('./upload-screen')).loadUpload(cms, context),
     title: 'Upload to Drive',
-    component: async (props) => (await import('./upload-screen')).UploadScreen({ cms, ...props }),
+    component: async (props) =>
+      withTabs(
+        cms,
+        props.user,
+        'drive',
+        import('./upload-screen').then((screens) => screens.UploadScreen({ cms, ...props })),
+      ),
   })
 
   for (const name of ACTIONS) {

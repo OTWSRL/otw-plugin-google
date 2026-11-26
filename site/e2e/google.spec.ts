@@ -40,7 +40,7 @@ test.beforeAll(async ({ browser }) => {
   admin = await browser.newPage()
 })
 
-test('the first visit sets the site up, and Google has a menu of its own', async () => {
+test('the first visit sets the site up; Google has one menu link, and tabs', async () => {
   await admin.goto('/admin')
   await expect(admin).toHaveURL('/admin/setup')
   await admin.getByLabel('Name').fill(ADMIN.name)
@@ -56,9 +56,49 @@ test('the first visit sets the site up, and Google has a menu of its own', async
   await expect(admin.getByText('/api/p/google/oauth/callback')).toBeVisible()
   await expect(admin.getByText('/api/p/core/sign-in/google/callback')).toBeVisible()
   const menu = admin.getByRole('navigation', { name: 'Main menu' })
-  for (const name of ['Accounts', 'YouTube', 'Drive', 'Settings']) {
-    await expect(menu.getByRole('link', { name, exact: true }).first()).toBeAttached()
-  }
+  // One link, with no submenu under it; the settings are under Settings, as a plugin's are.
+  await expect(menu.locator('#menu-google a')).toHaveCount(1)
+  await expect(menu.locator('#menu-google a')).toHaveAttribute('href', '/admin/google')
+  // Settings' submenu shows on hover: in the page, though hidden until then.
+  await expect(menu.locator('#menu-settings a[href="/admin/google/settings"]')).toHaveText('Google')
+  const tabs = admin.getByRole('navigation', { name: 'Google' })
+  await expect(tabs.getByRole('link')).toHaveText([
+    'Accounts',
+    'YouTube',
+    'Drive',
+    'Gmail',
+    'Settings',
+  ])
+  await expect(tabs.getByRole('link', { name: 'Accounts' })).toHaveAttribute('aria-current', 'page')
+
+  // The menu's icon is an address the browser fetches once and keeps, not an SVG in every page.
+  const style = (await menu.locator('#menu-google .cms-icon').getAttribute('style')) ?? ''
+  const icon = /url\("([^"]+)"\)/.exec(style)?.[1] ?? ''
+  expect(icon).toMatch(/^\/api\/p\/core\/icons\/google\?v=[0-9a-f]{12}$/)
+  const answer = await admin.request.get(icon)
+  expect(answer.status()).toBe(200)
+  expect(answer.headers()['content-type']).toBe('image/svg+xml')
+  expect(answer.headers()['cache-control']).toBe('private, max-age=31536000, immutable')
+})
+
+test('a tab opens the next Google screen without loading the page again', async () => {
+  await admin.goto('/admin/google')
+  await admin.evaluate(() => Object.assign(window, { kept: true }))
+  const asked = await requestsDuring(admin, async () => {
+    await admin
+      .getByRole('navigation', { name: 'Google' })
+      .getByRole('link', { name: 'YouTube' })
+      .click()
+    await expect(admin).toHaveURL('/admin/google/youtube')
+    await expect(admin.getByRole('heading', { name: 'YouTube', level: 1 })).toBeVisible()
+  })
+  expect(await admin.evaluate(() => (window as { kept?: boolean }).kept)).toBe(true)
+  // The screen alone: neither the page nor the menu again.
+  const pages = asked.filter((url) => new URL(url).searchParams.has('_rsc'))
+  expect(pages.map((url) => new URL(url).pathname)).toEqual(['/admin/google/youtube'])
+  await expect(
+    admin.getByRole('navigation', { name: 'Google' }).getByRole('link', { name: 'YouTube' }),
+  ).toHaveAttribute('aria-current', 'page')
 })
 
 test('a page of the site, and another admin screen, load nothing of the plugin', async ({
@@ -316,6 +356,13 @@ test('someone new signs in with Google, gets an account, and sees the Google scr
 
   // Her own accounts only: the administrator's isn't hers to see.
   await page.goto('/admin/google')
+  // The services are hers to use; the settings, not even as a tab.
+  await expect(page.getByRole('navigation', { name: 'Google' }).getByRole('link')).toHaveText([
+    'Accounts',
+    'YouTube',
+    'Drive',
+    'Gmail',
+  ])
   await expect(page.getByText('You haven’t connected a Google account yet.')).toBeVisible()
   await expect(page.getByText('ada@gmail.com')).toHaveCount(0)
   await expect(page.getByText('Redirect addresses')).toHaveCount(0)
@@ -337,7 +384,7 @@ test('the administrator signs in with Google too, as the account that has the ad
   await page.context().close()
 })
 
-test('the settings switch a service off, and its screen and menu entry go', async () => {
+test('the settings switch a service off, and its screen and tab go', async () => {
   await admin.goto('/admin/google/settings')
   await expect(admin.getByRole('heading', { name: 'Google settings', level: 1 })).toBeVisible()
   await expect(admin.getByText('Set by the GOOGLE_CLIENT_ID environment variable')).toBeVisible()
@@ -345,8 +392,12 @@ test('the settings switch a service off, and its screen and menu entry go', asyn
   await admin.getByRole('button', { name: 'Save Changes' }).click()
   await notice(admin, /saved/i)
   await admin.goto('/admin/google')
-  const menu = admin.getByRole('navigation', { name: 'Main menu' })
-  await expect(menu.getByRole('link', { name: 'Drive', exact: true })).toHaveCount(0)
+  await expect(admin.getByRole('navigation', { name: 'Google' }).getByRole('link')).toHaveText([
+    'Accounts',
+    'YouTube',
+    'Gmail',
+    'Settings',
+  ])
   const gone = await admin.goto('/admin/google/drive')
   expect(gone!.status()).toBe(404)
 })

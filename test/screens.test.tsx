@@ -4,7 +4,7 @@ import { listAccounts } from '../src/accounts'
 import google from '../src/index'
 import { domainsOf } from '../src/settings'
 import { createSealer } from '../src/secrets'
-import { bootGoogle } from './fixtures'
+import { bootGoogle, tabsOf } from './fixtures'
 
 describe('the accounts screen', () => {
   it('invites someone with no account to connect one', async () => {
@@ -116,6 +116,39 @@ describe('the accounts screen', () => {
     expect((await site.screen('/admin/google', author.user)).kind).toBe('forbidden')
     const editor = await site.person('e@cms.test', 'editor')
     expect((await site.screen('/admin/google', editor.user)).kind).toBe('page')
+  })
+})
+
+describe('the menu and the tabs', () => {
+  it('give Google one link in the menu, its services as tabs, and its settings under Settings', async () => {
+    const site = await bootGoogle()
+    const boss = await site.person('boss@cms.test')
+    const menu = site.kernel.adminMenu(boss.user)
+    expect(menu.find((section) => section.id === 'google')?.items.map((item) => item.url)).toEqual([
+      '/admin/google',
+    ])
+    expect(menu.find((section) => section.id === 'settings')?.items).toContainEqual(
+      expect.objectContaining({ label: 'Google', url: '/admin/google/settings' }),
+    )
+    const accounts = await site.screen('/admin/google', boss.user)
+    expect(tabsOf(accounts.html)).toEqual(['Accounts*', 'YouTube', 'Drive', 'Gmail', 'Settings'])
+    // Each tab opens as a menu link does: the next screen, without loading the page again.
+    expect(accounts.html.match(/data-admin-link/g)).toHaveLength(5)
+    expect(tabsOf((await site.screen('/admin/google/youtube', boss.user)).html)).toEqual([
+      'Accounts',
+      'YouTube*',
+      'Drive',
+      'Gmail',
+      'Settings',
+    ])
+    // Someone who uses Google without managing it has no Settings tab.
+    const eve = await site.person('eve@cms.test', 'editor')
+    expect(tabsOf((await site.screen('/admin/google/gmail', eve.user)).html)).toEqual([
+      'Accounts',
+      'YouTube',
+      'Drive',
+      'Gmail*',
+    ])
   })
 })
 

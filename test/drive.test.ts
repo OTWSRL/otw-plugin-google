@@ -14,7 +14,7 @@ import {
   storageQuota,
 } from '../src/services/drive/client'
 import { fakeDrive, pattern, type FakeDrive } from './fake-drive.mjs'
-import { bootGoogle, type BootOptions, type GoogleSite, type Person } from './fixtures'
+import { bootGoogle, tabsOf, type BootOptions, type GoogleSite, type Person } from './fixtures'
 
 /** A site where Ada has connected her Google account and allowed Drive. */
 async function driveSite(options: BootOptions = {}) {
@@ -749,10 +749,12 @@ describe('with Drive switched off', () => {
     const off = await bootGoogle({ routes: [fakeDrive], settings: { 'google.drive': false } })
     const bob = await off.person('bob@cms.test')
     expect((await off.screen('/admin/google/drive', bob.user)).kind).toBe('not-found')
-    const menu = off.kernel
-      .adminMenu(bob.user)
-      .flatMap((section) => section.items.map((item) => item.label))
-    expect(menu).not.toContain('Drive')
+    expect(tabsOf((await off.screen('/admin/google', bob.user)).html)).toEqual([
+      'Accounts*',
+      'YouTube',
+      'Gmail',
+      'Settings',
+    ])
     expect(
       (
         await post(off, bob, 'trash', [
@@ -761,11 +763,10 @@ describe('with Drive switched off', () => {
         ])
       ).status,
     ).toBe(404)
-    // Switched on, the screen and the menu entry are there.
-    expect((await site.screen('/admin/google/drive', ada.user)).kind).toBe('page')
-    expect(
-      site.kernel.adminMenu(ada.user).flatMap((section) => section.items.map((item) => item.label)),
-    ).toContain('Drive')
+    // Switched on, the screen and its tab are there.
+    const on = await site.screen('/admin/google/drive', ada.user)
+    expect(on.kind).toBe('page')
+    expect(tabsOf(on.html)).toContain('Drive*')
   })
 
   it('refuses a file’s bytes even to an account that allowed Drive before', async () => {

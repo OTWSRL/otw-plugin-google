@@ -39,6 +39,8 @@ export interface GoogleService {
   scopes: readonly string[]
   /** Whether it's switched on, read each time: Settings › Google can switch a service off. */
   enabled(): boolean
+  /** Its screen's address, for its tab across Google's screens. Without one, it has no tab. */
+  screen?: string
 }
 
 /** What the job that copies a video from Drive to YouTube is given, and carries between its runs. */

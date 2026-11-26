@@ -1,5 +1,6 @@
 import type { PluginContext } from '@otwdesign/sdk'
 import { USE } from '../../config'
+import { withTabs } from '../../screens/tabbed'
 
 /**
  * YouTube's admin screens and form actions, when the service is switched on. Each screen and
@@ -12,14 +13,19 @@ export function registerAdmin(cms: PluginContext): void {
     name: 'youtube',
     path: '/youtube',
     capability: USE,
-    menu: { label: 'YouTube', order: 10 },
     load: async (context) => (await import('./screens')).loadVideos(cms, context),
     title: 'YouTube',
     titleAction: ({ data }) =>
       data.channel
         ? { label: 'Upload video', url: `${cms.admin.url('/youtube/upload')}${data.query}` }
         : null,
-    component: async (props) => (await import('./screens')).VideosScreen({ cms, ...props }),
+    component: async (props) =>
+      withTabs(
+        cms,
+        props.user,
+        'youtube',
+        import('./screens').then((screens) => screens.VideosScreen({ cms, ...props })),
+      ),
   })
   cms.admin.page({
     name: 'youtube-video',
@@ -27,7 +33,13 @@ export function registerAdmin(cms: PluginContext): void {
     capability: USE,
     load: async (context) => (await import('./screens')).loadVideo(cms, context),
     title: ({ data }) => (data.video ? `Edit “${data.video.title}”` : 'Edit video'),
-    component: async (props) => (await import('./screens')).VideoScreen({ cms, ...props }),
+    component: async (props) =>
+      withTabs(
+        cms,
+        props.user,
+        'youtube',
+        import('./screens').then((screens) => screens.VideoScreen({ cms, ...props })),
+      ),
   })
   cms.admin.page({
     name: 'youtube-upload',
@@ -35,7 +47,13 @@ export function registerAdmin(cms: PluginContext): void {
     capability: USE,
     load: async (context) => (await import('./screens')).loadUpload(cms, context),
     title: 'Upload video',
-    component: async (props) => (await import('./screens')).UploadScreen({ cms, ...props }),
+    component: async (props) =>
+      withTabs(
+        cms,
+        props.user,
+        'youtube',
+        import('./screens').then((screens) => screens.UploadScreen({ cms, ...props })),
+      ),
   })
   cms.admin.page({
     name: 'youtube-playlists',
@@ -43,7 +61,13 @@ export function registerAdmin(cms: PluginContext): void {
     capability: USE,
     load: async (context) => (await import('./screens')).loadPlaylists(cms, context),
     title: 'Playlists',
-    component: async (props) => (await import('./screens')).PlaylistsScreen({ cms, ...props }),
+    component: async (props) =>
+      withTabs(
+        cms,
+        props.user,
+        'youtube',
+        import('./screens').then((screens) => screens.PlaylistsScreen({ cms, ...props })),
+      ),
   })
 
   for (const name of [
